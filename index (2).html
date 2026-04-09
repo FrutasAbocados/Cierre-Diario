@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0f14">
+<title>Abocados — Control Empresarial</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%91%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="lock-screen" id="loginScreen" style="display:none">
+  <div class="logo">🥑</div>
+  <h2>Abocados</h2>
+  <p style="color:var(--muted);font-size:13px">Control empresarial</p>
+  <div style="width:300px;display:flex;flex-direction:column;gap:10px;margin-top:10px">
+    <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password">
+    <div style="display:flex;gap:8px">
+      <button id="btnLogin" class="success" style="flex:1">Entrar</button>
+      <button id="btnSignup" class="secondary" style="flex:1">Registrarse</button>
+    </div>
+  </div>
+  <p id="loginMsg" style="font-size:12px;height:14px;text-align:center;max-width:300px"></p>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none">
+
+<h1>📊 Abocados — Control Empresarial <span class="badge blue">v4.0</span></h1>
+<div class="subtitle">
+  <span><span class="live-dot" id="syncDot"></span> <span id="syncStatus">Conectado</span></span>
+  <span id="userBadge"></span>
+  <span id="lastBackup"></span>
+  <button id="btnLogout" class="secondary sm" style="margin-left:auto">Cerrar sesión</button>
+</div>
+
+<div id="alertsBar"></div>
+
+<div class="tabs">
+  <button class="tab active" data-view="cierre">📝 Cierre del día</button>
+  <button class="tab" data-view="dashboard">📈 Dashboard</button>
+  <button class="tab" data-view="forecast">🔮 Forecast</button>
+  <button class="tab" data-view="objetivos">🎯 Objetivos</button>
+  <button class="tab" data-view="historial">📋 Historial</button>
+  <button class="tab" data-view="semanal">📅 Semanal</button>
+  <button class="tab" data-view="mensual">🗓️ Mensual</button>
+  <button class="tab" data-view="deudores">💳 Deudores</button>
+  <button class="tab" data-view="proveedores">🏪 Proveedores</button>
+  <button class="tab" data-view="sueldos">💼 Sueldos</button>
+  <button class="tab" data-view="datos">⚙️ Ajustes</button>
+</div>
+
+<!-- ============ VIEW: CIERRE DIARIO ============ -->
+<div class="view active" id="view-cierre">
+  <div class="card">
+    <div class="grid grid-3">
+      <div class="field">
+        <label>📅 Fecha del cierre</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="field">
+        <label>Día semana</label>
+        <input type="text" id="f-diasem" readonly>
+      </div>
+      <div class="field">
+        <label>Semana ISO</label>
+        <input type="text" id="f-semana" readonly>
+      </div>
+    </div>
+    <div id="edit-notice" style="display:none" class="alert info">
+      ✏️ Editando un cierre ya guardado del <b id="edit-fecha"></b>. Los cambios sobreescribirán los datos anteriores.
+    </div>
+
+    <div class="section-title">💰 Cobros del día</div>
+    <div class="grid grid-4">
+      <div class="field"><label>Efectivo</label><div class="input-prefix"><input type="number" step="0.01" id="f-efectivo" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Tarjeta</label><div class="input-prefix"><input type="number" step="0.01" id="f-tarjeta" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Otros efectivo</label><div class="input-prefix"><input type="number" step="0.01" id="f-otros-ef" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Otros tarjeta / transf.</label><div class="input-prefix"><input type="number" step="0.01" id="f-otros-tc" placeholder="0"><span>€</span></div></div>
+    </div>
+
+    <div class="section-title">🛒 Gastos del día (desglose)</div>
+    <div class="grid grid-4">
+      <div class="field"><label>Compras (proveedores)</label><div class="input-prefix"><input type="number" step="0.01" id="f-compras" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Vehículos / combustible</label><div class="input-prefix"><input type="number" step="0.01" id="f-vehiculos" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Otras compras</label><div class="input-prefix"><input type="number" step="0.01" id="f-otras" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Otros (regalos, etc.)</label><div class="input-prefix"><input type="number" step="0.01" id="f-regalos" placeholder="0"><span>€</span></div></div>
+    </div>
+
+    <div class="section-title">💳 Gestión de deuda (totales del día)</div>
+    <div class="grid grid-2">
+      <div class="field"><label>Deuda generada hoy</label><div class="input-prefix"><input type="number" step="0.01" id="f-deuda-gen" placeholder="0"><span>€</span></div></div>
+      <div class="field"><label>Deuda cobrada hoy</label><div class="input-prefix"><input type="number" step="0.01" id="f-deuda-cob" placeholder="0"><span>€</span></div></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:8px">
+      💡 Para tracking detallado por cliente usa la pestaña <b>Deudores</b>.
+    </p>
+
+    <div class="section-title">📦 Operación</div>
+    <div class="grid grid-3">
+      <div class="field"><label>Nº de pedidos</label><input type="number" id="f-pedidos" placeholder="0"></div>
+      <div class="field"><label>Nº clientes nuevos</label><input type="number" id="f-nuevos" placeholder="0"></div>
+      <div class="field"><label>Caja física al cierre</label><div class="input-prefix"><input type="number" step="0.01" id="f-caja" placeholder="0"><span>€</span></div></div>
+    </div>
+
+    <div class="section-title">📝 Incidencias / Observaciones</div>
+    <div class="field">
+      <textarea id="f-obs" placeholder="Anota incidencias, descuadres, eventos del día..."></textarea>
+    </div>
+
+    <div class="section-title">🧮 Cálculos automáticos</div>
+    <div class="grid grid-2">
+      <div>
+        <div class="calc-box hi"><span class="lbl">Total Cobrado</span><span class="val" id="c-total">0,00 €</span></div>
+        <div class="calc-box"><span class="lbl">Total Gastos</span><span class="val" id="c-gastos">0,00 €</span></div>
+        <div class="calc-box hi"><span class="lbl">Resultado Caja</span><span class="val" id="c-resultado">0,00 €</span></div>
+        <div class="calc-box"><span class="lbl">Margen Caja %</span><span class="val" id="c-margen">—</span></div>
+        <div class="calc-box"><span class="lbl">Provisión IVA</span><span class="val" id="c-iva">0,00 €</span></div>
+      </div>
+      <div>
+        <div class="calc-box"><span class="lbl">% Efectivo</span><span class="val" id="c-efpct">—</span></div>
+        <div class="calc-box"><span class="lbl">Variación deuda hoy</span><span class="val" id="c-vardeuda">0,00 €</span></div>
+        <div class="calc-box"><span class="lbl">Deuda acumulada</span><span class="val" id="c-deudaacum">0,00 €</span></div>
+        <div class="calc-box"><span class="lbl">Ticket medio</span><span class="val" id="c-ticket">—</span></div>
+        <div class="calc-box"><span class="lbl">Vs media 30 días</span><span class="val" id="c-vsmedia">—</span></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btn-guardar" class="success">💾 Guardar cierre</button>
+      <button id="btn-limpiar" class="secondary">🗑️ Limpiar formulario</button>
+      <button id="btn-cancelar-edit" class="warn" style="display:none">❌ Cancelar edición</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: DASHBOARD ============ -->
+<div class="view" id="view-dashboard">
+  <div class="grid grid-4" id="kpis-top"></div>
+  <div style="height:14px"></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Últimos 30 días — Cobros vs Gastos</h3><canvas id="chart-1" height="220"></canvas></div>
+    <div class="card"><h3>Deuda acumulada (evolución)</h3><canvas id="chart-2" height="220"></canvas></div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="grid grid-3">
+    <div class="card"><h3>Distribución cobros</h3><canvas id="chart-3" height="180"></canvas></div>
+    <div class="card"><h3>Día semana — promedio</h3><canvas id="chart-4" height="180"></canvas></div>
+    <div class="card"><h3>Mejor / peor día (último mes)</h3><div id="best-worst"></div></div>
+  </div>
+</div>
+
+<!-- ============ VIEW: FORECAST ============ -->
+<div class="view" id="view-forecast">
+  <div class="card">
+    <h3>🔮 Pronóstico — próximos 30 días</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Basado en tu media móvil por día de la semana de los últimos 60 días con datos.
+    </p>
+    <div class="grid grid-4" id="forecast-kpis"></div>
+    <div style="height:14px"></div>
+    <div class="card" style="background:var(--panel-2)"><h3>Proyección diaria estimada</h3><canvas id="chart-forecast" height="220"></canvas></div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>📊 Proyección mensual (cierre del mes actual)</h3><div id="forecast-mes"></div></div>
+    <div class="card"><h3>📅 Proyección semestral / anual</h3><div id="forecast-anual"></div></div>
+  </div>
+</div>
+
+<!-- ============ VIEW: OBJETIVOS ============ -->
+<div class="view" id="view-objetivos">
+  <div class="card">
+    <h3>🎯 Definir objetivos</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Deja un campo vacío y guarda para eliminar ese objetivo.
+    </p>
+    <div class="grid grid-3">
+      <div class="field"><label>Facturación mensual</label><div class="input-prefix"><input type="number" id="goal-mes" placeholder="ej. 80000"><span>€</span></div></div>
+      <div class="field"><label>Facturación anual</label><div class="input-prefix"><input type="number" id="goal-anio" placeholder="ej. 1000000"><span>€</span></div></div>
+      <div class="field"><label>Margen objetivo</label><div class="input-prefix"><input type="number" id="goal-margen" placeholder="ej. 25" step="0.1"><span>%</span></div></div>
+    </div>
+    <div class="actions">
+      <button id="btn-save-goals" class="success">💾 Guardar objetivos</button>
+      <button id="btn-clear-goals" class="secondary">🗑️ Eliminar todos</button>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="grid grid-2" id="goals-progress"></div>
+</div>
+
+<!-- ============ VIEW: HISTORIAL ============ -->
+<div class="view" id="view-historial">
+  <div class="card">
+    <h3>📋 Historial de cierres</h3>
+    <div class="filter-bar">
+      <input type="text" id="hist-search" placeholder="🔍 Buscar...">
+      <select id="hist-month"><option value="">Todos los meses</option></select>
+      <span style="color:var(--muted);font-size:12px" id="hist-count"></span>
+    </div>
+    <div class="scroll">
+      <table id="tbl-historial">
+        <thead><tr>
+          <th>Fecha</th><th>Día</th><th class="num">Efectivo</th><th class="num">Tarjeta</th>
+          <th class="num">Total cob.</th><th class="num">Gastos</th><th class="num">Resultado</th>
+          <th class="num">Margen</th><th class="num">D. gen.</th><th class="num">D. cob.</th>
+          <th class="num">Pedidos</th><th>Acciones</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: SEMANAL ============ -->
+<div class="view" id="view-semanal">
+  <div class="card">
+    <h3>📅 Resumen por semana ISO</h3>
+    <div class="scroll">
+      <table id="tbl-semanal">
+        <thead><tr>
+          <th>Sem.</th><th class="num">Total cobrado</th><th class="num">Total gastos</th>
+          <th class="num">Resultado</th><th class="num">Margen %</th>
+          <th class="num">Deuda gen.</th><th class="num">Deuda cob.</th><th class="num">Var. deuda</th>
+          <th class="num">Cobro/día</th><th class="num">vs sem ant.</th><th class="num">Pedidos</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: MENSUAL ============ -->
+<div class="view" id="view-mensual">
+  <div class="card">
+    <h3>🗓️ Análisis mensual</h3>
+    <div class="scroll">
+      <table id="tbl-mensual">
+        <thead><tr>
+          <th>Mes</th><th class="num">Total cobrado</th><th class="num">Total gastos</th>
+          <th class="num">Resultado</th><th class="num">Margen %</th>
+          <th class="num">Deuda gen.</th><th class="num">Deuda cob.</th><th class="num">Var. deuda</th>
+          <th class="num">Días op.</th><th class="num">Pedidos</th><th class="num">vs mes ant.</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="card"><h3>📊 Comparativa anual (cobros mes a mes)</h3><canvas id="chart-yoy" height="240"></canvas></div>
+</div>
+
+<!-- ============ VIEW: DEUDORES ============ -->
+<div class="view" id="view-deudores">
+  <div class="card">
+    <h3 id="d-form-title">💳 Añadir deuda de cliente</h3>
+    <div class="grid grid-4">
+      <div class="field"><label>Cliente</label><input type="text" id="d-cliente" placeholder="Nombre"></div>
+      <div class="field"><label>Concepto</label><input type="text" id="d-concepto" placeholder="Pedido del 5/4..."></div>
+      <div class="field"><label>Importe</label><div class="input-prefix"><input type="number" step="0.01" id="d-importe"><span>€</span></div></div>
+      <div class="field"><label>Fecha</label><input type="date" id="d-fecha"></div>
+    </div>
+    <div class="actions">
+      <button id="btn-add-deuda" class="success">➕ Añadir deuda</button>
+      <button id="btn-cancel-deuda" class="secondary" style="display:none">Cancelar</button>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="grid grid-3" id="deudores-kpis"></div>
+  <div style="height:14px"></div>
+  <div class="card">
+    <h3>Deudas (todas)</h3>
+    <div class="filter-bar">
+      <select id="d-filtro">
+        <option value="todas">Todas</option>
+        <option value="pendientes" selected>Solo pendientes</option>
+        <option value="cobradas">Solo cobradas</option>
+        <option value="antiguas">Solo antiguas</option>
+      </select>
+    </div>
+    <div class="scroll">
+      <table id="tbl-deudores">
+        <thead><tr>
+          <th>Cliente</th><th>Concepto</th><th>Fecha</th><th class="num">Importe</th><th>Antigüedad</th><th>Estado</th><th>Acciones</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: PROVEEDORES ============ -->
+<div class="view" id="view-proveedores">
+  <div class="card">
+    <h3 id="p-form-title">🏪 Registrar gasto / proveedor</h3>
+    <div class="grid grid-4">
+      <div class="field"><label>Proveedor / concepto</label><input type="text" id="p-nombre" placeholder="Ej: Yiaveh, Torres..."></div>
+      <div class="field"><label>Categoría</label>
+        <select id="p-cat">
+          <option>Compras</option><option>Vehículos</option><option>Otras compras</option>
+          <option>Regalos</option><option>Servicios</option><option>Alquiler</option><option>Otros</option>
+        </select>
+      </div>
+      <div class="field"><label>Importe</label><div class="input-prefix"><input type="number" step="0.01" id="p-importe"><span>€</span></div></div>
+      <div class="field"><label>Fecha</label><input type="date" id="p-fecha"></div>
+    </div>
+    <div class="actions">
+      <button id="btn-add-prov" class="success">➕ Registrar gasto</button>
+      <button id="btn-cancel-prov" class="secondary" style="display:none">Cancelar</button>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="grid grid-2">
+    <div class="card"><h3>Top proveedores (último mes)</h3><div id="top-prov"></div></div>
+    <div class="card"><h3>Distribución por categoría</h3><canvas id="chart-cat" height="200"></canvas></div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="card">
+    <h3>Histórico gastos detallados</h3>
+    <div class="scroll">
+      <table id="tbl-prov">
+        <thead><tr><th>Fecha</th><th>Proveedor</th><th>Categoría</th><th class="num">Importe</th><th>Acciones</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: SUELDOS ============ -->
+<div class="view" id="view-sueldos">
+  <div class="card">
+    <h3 id="s-form-title">💼 Registrar movimiento de sueldo</h3>
+    <div class="grid grid-5">
+      <div class="field"><label>Empleado</label><input type="text" id="s-emp"></div>
+      <div class="field"><label>Tipo</label>
+        <select id="s-tipo">
+          <option value="nomina">Nómina</option>
+          <option value="anticipo">Anticipo</option>
+          <option value="extra">Extra</option>
+          <option value="descuento">Descuento</option>
+        </select>
+      </div>
+      <div class="field"><label>Importe</label><div class="input-prefix"><input type="number" step="0.01" id="s-importe"><span>€</span></div></div>
+      <div class="field"><label>Fecha</label><input type="date" id="s-fecha"></div>
+      <div class="field"><label>&nbsp;</label>
+        <div style="display:flex;gap:6px">
+          <button id="btn-add-sueldo" class="success">➕ Añadir</button>
+          <button id="btn-cancel-sueldo" class="secondary" style="display:none">×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="card"><h3>Resumen por empleado (mes actual)</h3><div id="sueldos-resumen"></div></div>
+  <div style="height:14px"></div>
+  <div class="card">
+    <h3>Movimientos</h3>
+    <div class="scroll">
+      <table id="tbl-sueldos">
+        <thead><tr><th>Fecha</th><th>Empleado</th><th>Tipo</th><th class="num">Importe</th><th>Acciones</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: AJUSTES / DATOS ============ -->
+<div class="view" id="view-datos">
+  <div class="card">
+    <h3>⚙️ Ajustes de cálculo</h3>
+    <div class="grid grid-3">
+      <div class="field"><label>% IVA aplicado</label><div class="input-prefix"><input type="number" id="set-iva" step="0.1"><span>%</span></div></div>
+      <div class="field"><label>Umbral alerta margen</label><div class="input-prefix"><input type="number" id="set-margen-alerta" step="0.1"><span>%</span></div></div>
+      <div class="field"><label>Días aviso deuda antigua</label><input type="number" id="set-deuda-dias" placeholder="30"></div>
+    </div>
+    <button id="btn-save-settings" class="success">Guardar ajustes</button>
+  </div>
+  <div style="height:14px"></div>
+  <div class="card">
+    <h3>📁 Backup y datos</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+      Tus datos están en Supabase (la nube), sincronizados entre todos tus dispositivos. La caché local de IndexedDB acelera la carga y permite uso offline básico. <b>Recomendado: backup JSON cada mes</b> como copia adicional.
+    </p>
+    <div class="actions">
+      <button id="btn-export-json">⬇️ Exportar JSON (backup completo)</button>
+      <button id="btn-export-csv" class="secondary">⬇️ Exportar CSV (cierres)</button>
+      <button id="btn-import" class="secondary">⬆️ Importar JSON</button>
+      <input type="file" id="file-import" accept=".json" style="display:none">
+      <button id="btn-print" class="secondary">🖨️ Imprimir vista actual</button>
+      <button id="btn-resync" class="secondary">🔄 Resincronizar desde la nube</button>
+    </div>
+    <div style="margin-top:18px">
+      <div class="calc-box"><span class="lbl">Cierres guardados</span><span class="val" id="stat-count">0</span></div>
+      <div class="calc-box"><span class="lbl">Deudas activas</span><span class="val" id="stat-deudas">0</span></div>
+      <div class="calc-box"><span class="lbl">Movimientos proveedores</span><span class="val" id="stat-prov">0</span></div>
+      <div class="calc-box"><span class="lbl">Movimientos sueldos</span><span class="val" id="stat-sueldos">0</span></div>
+      <div class="calc-box"><span class="lbl">Primer cierre</span><span class="val" id="stat-first">—</span></div>
+      <div class="calc-box"><span class="lbl">Último cierre</span><span class="val" id="stat-last">—</span></div>
+      <div class="calc-box"><span class="lbl">Último backup local</span><span class="val" id="stat-backup">Nunca</span></div>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+  <div class="card" style="border-color:var(--red)">
+    <h3 style="color:var(--red)">⚠️ Zona peligrosa</h3>
+    <p style="color:var(--muted);font-size:12px;margin-bottom:14px">
+      Estas acciones borran los datos en la nube y son irreversibles. Te recomiendo exportar un backup antes.
+    </p>
+    <div class="actions">
+      <button id="btn-borrar-cierres" class="danger">🗑️ Borrar solo cierres</button>
+      <button id="btn-borrar-deudas" class="danger">🗑️ Borrar solo deudas</button>
+      <button id="btn-borrar-prov" class="danger">🗑️ Borrar solo proveedores</button>
+      <button id="btn-borrar-sueldos" class="danger">🗑️ Borrar solo sueldos</button>
+      <button id="btn-borrar-todo" class="danger">⚠️ BORRAR TODO</button>
+    </div>
+  </div>
+</div>
+
+</div> <!-- end #app -->
+
+<div class="toast" id="toast"></div>
+
+<!-- Supabase JS SDK desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
